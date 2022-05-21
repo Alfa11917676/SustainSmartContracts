@@ -31,10 +31,9 @@ contract rewardToken is ERC20, ChainlinkClient, Ownable {
         fee = 0.1 * 10 ** 18; // (Varies by network and job)
     }
 
-    function requestVolumeData(string memory dataUrl) public returns (bytes32 requestId)
+    function requestVolumeData(string memory dataUrl,string memory projectId) public returns (bytes32 requestId)
     {
-        require (keccak256(abi.encodePacked(msg.sender)) == keccak256(abi.encodePacked(dataUrl)),'Not user');
-        string memory finalUrl = string(abi.encodePacked(url,dataUrl));
+        string memory finalUrl = string(abi.encodePacked(url,dataUrl,"&projectid=",projectId));
         Chainlink.Request memory request = buildChainlinkRequest(jobId, address(this), this.fulfill.selector);
         request.add("get", finalUrl);
         request.add("path", "result,0,refundamount");

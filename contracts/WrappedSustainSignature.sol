@@ -14,7 +14,7 @@ contract WrappedSustainSignature is EIP712Upgradeable{
         bytes signature;
     }
 
-    function __SustainSigner_init(string memory domain, string memory version) internal initializer {
+    function __WrappedSustainSignature_init(string memory domain, string memory version) internal initializer {
         SIGNING_DOMAIN = domain;
         SIGNATURE_VERSION = version;
         __EIP712_init(domain, version);

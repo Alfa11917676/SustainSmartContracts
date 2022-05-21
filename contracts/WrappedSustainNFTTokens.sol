@@ -16,8 +16,9 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature 
     mapping(address => mapping (uint => uint)) public loanRepaid;
     mapping(uint => address) public tokenOwner;
     mapping (address => mapping (uint => bool)) public nonceUsed;
-    function initialize(address nftAddress, address tokenAddress) external initializer {
+    function initialize(string memory domain, string memory version, address nftAddress, address tokenAddress) external initializer {
         __Ownable_init();
+        __WrappedSustainSignature_init(domain, version);
         token = IERC20Upgradeable(tokenAddress);
         nft = IERC721Upgradeable(nftAddress);
     }

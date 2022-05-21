@@ -12,11 +12,17 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
     //(0,0.1,0.25,0.5)*100
     uint[] public rewardRate;
     uint public globalTimeDelta;
+    uint[] public tokentierToPrice;
+    uint[] public tokenIdToTokenAllocation;
     // tokenId => lastClaimTime
     mapping (uint => uint) public lastClaimTime;
     // tokenId => tokenTier
     mapping (uint => uint) public tokentier;
+    // randomNess
+    string randomNonce;
     mapping (address => mapping (uint => bool)) public nonceUsed;
+    // tokenId => true/false
+    mapping (uint => bool) public tokenTaken;
     function initialize (
         string memory domain,
         string memory version,
@@ -29,37 +35,42 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
         __SustainSigner_init(domain, version);
         designatedSigner = _designatedSigner;
         token = IERC20Upgradeable(_tokenAddress);
+        randomNonce = string(abi.encodePacked(domain,symbol,name,version));
         rewardRate= [0,10,25,50];
+        tokentierToPrice= [0,10 ether, 25 ether, 50 ether];
+        tokenIdToTokenAllocation= [0,0,5000,10000];
         _mint(owner(),14999);
     }
 
     // tokenId <5000 tier =1 , tokenID <10000 && >=5000 tier=2, tokenID <15000 && >=10000
-    function _giveTokens(Sustain memory sustain, uint[] memory randomNFTNumber, uint[] memory tokenTypes) external {
+    function _giveTokens(Sustain memory sustain, uint[] memory tokenTypes) external {
         require (getSigner(sustain) == designatedSigner,'!Signer');
         require (msg.sender == sustain.userAddress,'!User');
         require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
         require (!nonceUsed[msg.sender][sustain.nonce],'Nonce Used Already');
+        nonceUsed[msg.sender][sustain.nonce] = true;
         for (uint i=0;i< tokenTypes.length;i++){
-            if (tokenTypes[i]==1){
-                token.transferFrom(sustain.userAddress,address(this),10 ether);
-                tokentier[randomNFTNumber[i]] = 1;
-                safeTransferFrom(owner(),sustain.userAddress,randomNFTNumber[i]);
-            }
-            else if (tokenTypes[i]==2){
-                token.transferFrom(sustain.userAddress,address(this),20 ether);
-                tokentier[randomNFTNumber[i]] = 2;
-                safeTransferFrom(owner(),sustain.userAddress,randomNFTNumber[i]);
-            }
-            else if (tokenTypes[i]==3){
-                token.transferFrom(sustain.userAddress,address(this),50 ether);
-                tokentier[randomNFTNumber[i]] = 3;
-                safeTransferFrom(owner(),sustain.userAddress,randomNFTNumber[i]);
-            }
-            else {
-                revert('Wrong tokentype');
-                }
-            nonceUsed[msg.sender][sustain.nonce] = true;
+                uint tokenId = getTokenNumber(tokenTypes[i]);
+                tokentier[tokenId] = tokenTypes[i];
+                tokenTaken[tokenId] = true;
+                token.transferFrom(sustain.userAddress,address(this),tokentierToPrice[tokenTypes[i]]);
+                safeTransferFrom(owner(),sustain.userAddress,tokenId);
         }
+    }
+
+    function getTokenNumber(uint tokenTier) internal returns (uint) {
+        uint randomNumber;
+        randomNumber = randomNumberGenerator();
+        randomNumber = (randomNumber % 5000) + tokenIdToTokenAllocation[tokenTier];
+
+        bool status;
+        while(!status){
+            randomNumber++;
+            if (!tokenTaken[randomNumber]){
+                    status = true;
+            }
+        }
+        return randomNumber;
     }
 
     function getRewards(uint[] memory tokenIds, address user) public view returns(uint){
@@ -100,6 +111,12 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
 
     function setTokenType(address _type) external onlyOwner {
         token = IERC20Upgradeable(_type);
+    }
+
+    function randomNumberGenerator () internal returns (uint) {
+        uint randomNumber = uint(keccak256(abi.encodePacked(block.number, block.difficulty, randomNonce)));
+        randomNonce = string(abi.encodePacked(block.number, block.difficulty, randomNonce));
+        return randomNumber;
     }
 
     function withDrawToken () external onlyOwner {

@@ -1,29 +1,37 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
+
 const hre = require("hardhat");
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
 
-  // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const sustain = await hre.ethers.getContractFactory("rewardToken");
+  const Sustain = await sustain.deploy("Sustain",'$SUS');
+  await Sustain.deployed();
+  console.log("Sustain deployed to:", Sustain.address);
 
-  await greeter.deployed();
+  const SustainNFT = await hre.ethers.getContractFactory('SustainNFT')
+  const sustainNFt = await hre.upgrade.deployProxy(SustainNFT,[
+      "SUSTAIN_NFT",
+      "1",
+      "SUSTAIN_NFT",
+      "SNFT",
+      Sustain.address,
+      Sustain.address
+  ])
+  await sustainNFt.deployed()
+  console.log('The sustain nft is deployed to ',sustainNFt.address)
 
-  console.log("Greeter deployed to:", greeter.address);
+  const Wrapped = await hre.ethers.getContractFactory("WrappedSustainNFTTokens")
+  const wrapped = await hre.upgrade.deployProxy(Wrapped, [
+        "Wrapped_NFT_Asset",
+        "1",
+        sustainNFt.address,
+        Sustain.address
+  ])
+
+ await  wrapped.deployed()
+  console.log('The wrapped asset is deployed to: ', wrapped.address)
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
