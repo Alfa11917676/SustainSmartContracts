@@ -26,10 +26,10 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature 
         require (msg.sender == wrapped.userAddress,'!User');
         require(wrapped.nonce+ 10 minutes >= block.timestamp,'!Signature Expired');
         require (getSigner(wrapped) == designatedSigner);
-        require (!nonceUsed[msg.sender][sustain.nonce],'Nonce Used Already');
-        nonceUsed[msg.sender][sustain.nonce] = true;
+        require (!nonceUsed[msg.sender][wrapped.nonce],'Nonce Used Already');
+        nonceUsed[msg.sender][wrapped.nonce] = true;
         nft.safeTransferFrom(wrapped.userAddress,address(this),wrapped.nftId);
-        loanTaken[wrapped.userAddress][wrapped.nftId] = loanAmount;
+        loanTaken[wrapped.userAddress][wrapped.nftId] = wrapped.loanAmount;
         tokenOwner[wrapped.nftId] = wrapped.userAddress;
         token.transfer(wrapped.userAddress,wrapped.loanAmount);
     }

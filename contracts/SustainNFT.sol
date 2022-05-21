@@ -29,7 +29,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
         __SustainSigner_init(domain, version);
         designatedSigner = _designatedSigner;
         token = IERC20Upgradeable(_tokenAddress);
-        rewardRate== [0,10,25,50];
+        rewardRate= [0,10,25,50];
         _mint(owner(),14999);
     }
 
@@ -83,13 +83,15 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
     }
 
     function mintTokensFromReward (Sustain memory sustain) external {
-        require(getRewards([sustain.tokenId],sustain.userAddress)>tokentier[sustain.tokenId],'Minimum amount not satisfied');
+        uint[] memory tokenId;
+        tokenId[0] = sustain.tokenId;
+        require(getRewards(tokenId,sustain.userAddress)>tokentier[sustain.tokenId],'Minimum amount not satisfied');
         require (msg.sender == sustain.userAddress,'!User');
         require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
-        uint amount = getRewards([sustain.tokenId],sustain.userAddress);
+        uint amount = getRewards(tokenId,sustain.userAddress);
         token.transfer(msg.sender,amount-tokentier[sustain.tokenId]);
         lastClaimTime[sustain.tokenId] = block.timestamp;
-        safeTransferFrom(address(this), msg.sender, sustain.randomNumber);
+        safeTransferFrom(address(this), msg.sender, sustain.randomTokenId);
     }
 
     function addDesignatedSigner(address _signer) external onlyOwner {
