@@ -4,23 +4,34 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-contract WrappedSustainNFTTokens is OwnableUpgradeable {
+import "./WrappedSustainSignature.sol";
+contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature {
 
     IERC721Upgradeable nft;
     IERC20Upgradeable token;
+    address public designatedSigner;
     // userAddress => nftId => amount
     mapping(address => mapping (uint => uint)) public loanTaken;
+    // userAddress => nftId => amount
     mapping(address => mapping (uint => uint)) public loanRepaid;
     mapping(uint => address) public tokenOwner;
-    function initialize() external initializer {
+    mapping (address => mapping (uint => bool)) public nonceUsed;
+    function initialize(address nftAddress, address tokenAddress) external initializer {
         __Ownable_init();
+        token = IERC20Upgradeable(tokenAddress);
+        nft = IERC721Upgradeable(nftAddress);
     }
 
-    function loanToken(uint collateralNftId, uint loanAmount) external {
-        nft.safeTransferFrom(msg.sender,address(this),collateralNftId);
-        loanTaken[msg.sender][collateralNftId] = loanAmount;
-        tokenOwner[collateralNftId] = msg.sender;
-        token.transfer(msg.sender,loanAmount);
+    function loanToken(WrappedSustain memory wrapped) external {
+        require (msg.sender == wrapped.userAddress,'!User');
+        require(wrapped.nonce+ 10 minutes >= block.timestamp,'!Signature Expired');
+        require (getSigner(wrapped) == designatedSigner);
+        require (!nonceUsed[msg.sender][sustain.nonce],'Nonce Used Already');
+        nonceUsed[msg.sender][sustain.nonce] = true;
+        nft.safeTransferFrom(wrapped.userAddress,address(this),wrapped.nftId);
+        loanTaken[wrapped.userAddress][wrapped.nftId] = loanAmount;
+        tokenOwner[wrapped.nftId] = wrapped.userAddress;
+        token.transfer(wrapped.userAddress,wrapped.loanAmount);
     }
 
     function payBackAmount (uint collateralNftId, uint amount) external {
@@ -43,5 +54,14 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable {
         for (uint i =0; i< nftIds.length; i++) {
             nft.transferFrom(address(this), owner(), nftIds[i]);
         }
+    }
+
+    function setCryptoAddresses (address tokenAddress, address nftAddress) external onlyOwner {
+        token = IERC20Upgradeable(tokenAddress);
+        nft = IERC721Upgradeable(nftAddress);
+    }
+
+    function setDesignatedSigner (address _signer) external onlyOwner {
+        designatedSigner = _signer;
     }
 }
