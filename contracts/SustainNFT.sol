@@ -9,20 +9,22 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable {
     address public designatedSigner;
     IERC20Upgradeable token;
+    string randomNonce;
+    uint public globalTimeDelta;
     //(0,0.1,0.25,0.5)*100
     uint[] public rewardRate;
-    uint public globalTimeDelta;
     uint[] public tokentierToPrice;
     uint[] public tokenIdToTokenAllocation;
+
     // tokenId => lastClaimTime
     mapping (uint => uint) public lastClaimTime;
     // tokenId => tokenTier
     mapping (uint => uint) public tokentier;
     // randomNess
-    string randomNonce;
     mapping (address => mapping (uint => bool)) public nonceUsed;
     // tokenId => true/false
     mapping (uint => bool) public tokenTaken;
+
     function initialize (
         string memory domain,
         string memory version,
