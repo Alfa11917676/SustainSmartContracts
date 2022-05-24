@@ -10,6 +10,8 @@ contract WrappedSustainSignature is EIP712Upgradeable{
         address userAddress;
         uint nftId;
         uint loanAmount;
+        uint interestAmount;
+        bool inStableCoin;
         uint nonce;
         bytes signature;
     }
@@ -28,10 +30,12 @@ contract WrappedSustainSignature is EIP712Upgradeable{
 
     function _hash(WrappedSustain memory sustain) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
-                keccak256("WrappedSustain(address userAddress,uint256 nftId,uint256 loanAmount,uint256 nonce)"),
+                keccak256("WrappedSustain(address userAddress,uint256 nftId,uint256 loanAmount,uint256 loanAmount,uint256 interestAmount,bool inStableCoin,uint256 nonce)"),
                     sustain.userAddress,
                     sustain.nftId,
                     sustain.loanAmount,
+                    sustain.interestAmount,
+                    sustain.inStableCoin,
                     sustain.nonce
             )));
     }

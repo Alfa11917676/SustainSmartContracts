@@ -46,12 +46,12 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature 
     function payBackAmount (uint collateralNftId, uint amount, uint interestAmount) external payable {
         require (tokenOwner[collateralNftId]==msg.sender,'!Owner of asset');
         token.transferFrom(msg.sender, address(this), amount);
-        loanRepaid[msg.sender][collateralNftId]+=amount;
+        loanRepaid[msg.sender][collateralNftId][tokenIdToLoanCurrency[collateralNftId]]+=amount;
     }
 
     function withdrawAsset (uint collateralNFTId) external {
         require (tokenOwner[collateralNFTId]==msg.sender,'!Owner');
-        require (loanRepaid[msg.sender][collateralNFTId] >= loanTaken[msg.sender][collateralNFTId],'Loan Not Repaid');
+        require (loanRepaid[msg.sender][collateralNFTId][tokenIdToLoanCurrency[collateralNFTId]] >= loanTaken[msg.sender][collateralNFTId][tokenIdToLoanCurrency[collateralNFTId]],'Loan Not Repaid');
         nft.transferFrom(address(this), msg.sender, collateralNFTId);
     }
 
