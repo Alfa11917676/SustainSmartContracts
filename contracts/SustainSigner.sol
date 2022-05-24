@@ -11,6 +11,9 @@ contract SustainSigner is EIP712Upgradeable{
         uint tokenType;
         uint nonce;
         uint tokenId;
+        uint loanAmount;
+        uint interestAmount;
+        bool inStableCoin;
         bytes signature;
     }
 
@@ -28,11 +31,14 @@ contract SustainSigner is EIP712Upgradeable{
 
     function _hash(Sustain memory sustain) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
-                keccak256("Sustain(address userAddress,uint256 tokenType,uint256 nonce,uint256 tokenId)"),
+                keccak256("Sustain(address userAddress,uint256 tokenType,uint256 nonce,uint256 tokenId,uint256 loanAmount,uint256 interestAmount,bool inStableCoin)"),
                     sustain.userAddress,
                     sustain.tokenType,
                     sustain.nonce,
-                    sustain.tokenId
+                    sustain.tokenId,
+                    sustain.loanAmount,
+                    sustain.interestAmount,
+                    sustain.inStableCoin
             )));
     }
 
