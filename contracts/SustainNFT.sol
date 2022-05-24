@@ -103,14 +103,9 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable, VR
     }
 
     // tokenId <5000 tier =1 , tokenID <10000 && >=5000 tier=2, tokenID <15000 && >=10000
-    function _giveTokens(Sustain memory sustain, uint[] memory tokenTypes) external {
-        require (getSigner(sustain) == designatedSigner,'!Signer');
-        require (msg.sender == sustain.userAddress,'!User');
-        require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
-        require (!nonceUsed[msg.sender][sustain.nonce],'Nonce Used Already');
-        nonceUsed[msg.sender][sustain.nonce] = true;
+    function _giveTokens(address _user, uint[] memory tokenTypes, uint[] memory randomNumbers) internal {
         for (uint i=0;i< tokenTypes.length;i++){
-                uint tokenId = getTokenNumber(tokenTypes[i]);
+                uint tokenId = getTokenNumber(tokenTypes[i],randomNumbers[i]);
                 tokentier[tokenId] = tokenTypes[i];
                 tokenTaken[tokenId] = true;
                 token.transferFrom(_user,address(this),tokentierToPrice[tokenTypes[i]]);
@@ -175,12 +170,6 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721AUpgradeable, VR
     function setTokenType(address _type) external onlyOwner {
         token = IERC20Upgradeable(_type);
     }
-
-//    function randomNumberGenerator () internal returns (uint) {
-//        uint randomNumber = uint(keccak256(abi.encodePacked(block.number, block.difficulty, randomNonce)));
-//        randomNonce = string(abi.encodePacked(block.number, block.difficulty, randomNonce));
-//        return randomNumber;
-//    }
 
     function withDrawToken () external onlyOwner {
         token.transfer(owner(),token.balanceOf(address(this)));
