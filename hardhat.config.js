@@ -37,12 +37,9 @@ module.exports = {
       },
     },
   },
-  namedAccounts: {
-    deployer: 0,
-  },
   networks: {
     rinkeby: {
-      url: `https://eth-rinkeby.alchemyapi.io/v2/vJGdxlD1-wyt4XcCO6XNTlbnI9VFAITZ`,
+      url: `https://rinkeby.infura.io/v3/07447ee41c2f4f4faf367d4ee05f5bb8`,
       accounts: [`${process.env.PRIVATE_KEY}`],
     },
     mainnet: {
@@ -54,7 +51,7 @@ module.exports = {
   // reporter: 'eth-gas-reporter',
   // reporterOptions : { ... } // See options below
   // },
-  etherscan: {
-    apiKey: ETHERSCAN_API_KEY,
-  },
+    etherscan: {
+      apiKey: ETHERSCAN_API_KEY,
+    },
 };
