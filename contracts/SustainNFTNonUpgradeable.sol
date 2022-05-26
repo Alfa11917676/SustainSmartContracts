@@ -45,6 +45,7 @@ contract SustainNFT is SustainSignerNonUpgradeable, Ownable, ERC721A, VRFConsume
         randomNonce = string(abi.encodePacked(name,symbol));
         COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
         token = IERC20(_tokenAddress);
+        designatedSigner = _designatedSigner;
         s_owner = msg.sender;
         s_subscriptionId = subscriptionId;
         _mint(owner(),14999);
