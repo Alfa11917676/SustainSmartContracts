@@ -31,7 +31,7 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature,
         nft = IERC721Upgradeable(nftAddress);
     }
 
-    function loanToken(WrappedSustain memory wrapped) external {
+    function loanToken(WrappedSustain memory wrapped) external nonReentrant{
         require (msg.sender == wrapped.userAddress,'!User');
         require(wrapped.nonce+ 10 minutes >= block.timestamp,'!Signature Expired');
         require (getSigner(wrapped) == designatedSigner);
