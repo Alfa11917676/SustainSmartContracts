@@ -18,7 +18,7 @@ contract SustainNFT is SustainSignerNonUpgradeable, Ownable, ERC721A, VRFConsume
     IERC20 token;
     string randomNonce;
     uint public globalTimeDelta;
-    //(0,0.1,0.25,0.5)*100
+
     uint[] public rewardRate= [0,10,25,50];
     uint[] public tokentierToPrice= [0,10 ether, 25 ether, 50 ether];
     uint[] public tokenIdToTokenAllocation= [0,0,5000,10000];
