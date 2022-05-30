@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
-contract WrappedSustainSignature is EIP712Upgradeable{
+contract Sustain_Lender_Staker_Signer is EIP712Upgradeable{
 
     string private SIGNING_DOMAIN;
     string private SIGNATURE_VERSION;

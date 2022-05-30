@@ -5,9 +5,9 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "./WrappedSustainSignature.sol";
+import "./Sustain_Lender_Staker_Contract_Signer.sol";
 import "./ABDKMath64x64.sol";
-contract WrappedSustainNFTTokens is OwnableUpgradeable, WrappedSustainSignature, ReentrancyGuardUpgradeable  {
+contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable  {
 
     IERC721Upgradeable nft;
     IERC20Upgradeable sustainToken;
