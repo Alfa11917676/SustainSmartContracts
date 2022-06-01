@@ -16,10 +16,10 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
     struct tokenInfo {
         uint stakeTime;
         uint lastClaimTime;
+        uint apr;
         address owner;
     }
 
-    uint public yieldPerDay;
     address public designatedSigner;
     // true => stable coin, false => native
     // userAddress => nftId =>  true/false => amount
@@ -48,7 +48,6 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
         __Ownable_init();
         __ReentrancyGuard_init();
         __WrappedSustainSignature_init(domain, version);
-        yieldPerDay = 100;
         stableToken = IERC20Upgradeable(_stableAddress);
         sustainToken = IERC20Upgradeable(_sustainAddress);
         nft = IERC721Upgradeable(nftAddress);
@@ -125,15 +124,18 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
 
     // STAKING IMPLEMENTATION //
 
-    function stakeTokens (uint[] memory tokenIds) external {
+    function stakeTokens (uint[] memory tokenIds, WrappedSustain[] memory signer) external {
         for (uint i = 0; i< tokenIds.length; i++) {
-            require (nft.ownerOf(tokenIds[i])==msg.sender,'!Owner');
+            require (getSigner(signer[i]) == designatedSigner,'!Signer');
+            require (signer[i].userAddress == msg.sender,'!User');
+            require (nft.ownerOf(tokenIds[i]) == msg.sender,'!NFT_Owner');
             tokenStakingOwner[tokenIds[i]] = msg.sender;
             tokensStakedPerOwner[msg.sender].push(tokenIds[i]);
             tokenInfo memory info;
             info.owner = msg.sender;
             info.stakeTime = block.timestamp;
             info.lastClaimTime = block.timestamp;
+            info.apr = signer[i].apr;
             stakeInfo[tokenIds[i]] = info;
             nft.safeTransferFrom(msg.sender, address(this), tokenIds[i]);
         }
@@ -157,8 +159,8 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
     }
 
     function getRewards(uint tokenId) public view returns(uint) {
-            uint amount = getCompoundInterest(yieldPerDay,block.timestamp - stakeInfo[tokenId].lastClaimTime);
-            return amount * 1 ether;
+            uint amount = getCompoundInterest(stakeInfo[tokenId].apr,block.timestamp - stakeInfo[tokenId].lastClaimTime);
+            return amount;
     }
 
     function un_stakeToken(uint[] memory tokenIds) external {
@@ -168,10 +170,6 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
                 delete tokenStakingOwner[tokenIds[i]];
                 nft.safeTransferFrom(address(this),msg.sender,tokenIds[i]);
         }
-    }
-
-    function setYieldPerDay(uint _amount) external onlyOwner {
-        yieldPerDay = _amount;
     }
 
     function getTotalTokenStakingPerUser(address _user) external view returns(uint[] memory) {
