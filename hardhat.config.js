@@ -29,7 +29,7 @@ module.exports = {
     },
   },
   networks: {
-    rinkeby: {
+    matic: {
       url: `https://polygon-mumbai.infura.io/v3/07447ee41c2f4f4faf367d4ee05f5bb8`,
       accounts: [`${process.env.PRIVATE_KEY}`],
     },

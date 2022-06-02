@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-contract rewardToken is ERC20, ChainlinkClient, Ownable {
+contract sustainToken is ERC20, ChainlinkClient, Ownable {
     using Chainlink for Chainlink.Request;
 
     // uint256 public volume;

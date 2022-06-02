@@ -5,10 +5,10 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "./SustainSigner.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRFConsumerBaseV2{
-    VRFCoordinatorV2Interface COORDINATOR;
+contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRFConsumerBase{
+
 
     uint64 s_subscriptionId;
     uint256[] public s_randomWords;
@@ -17,7 +17,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     address public designatedSigner;
     IERC20Upgradeable token;
     string randomNonce;
-    uint public globalTimeDelta;
+    uint public rebaseTime;
     bool isMinted;
     //(0,0.1,0.25,0.5)*100
     uint[] public rewardRate;
@@ -33,8 +33,8 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     // tokenId => true/false
     mapping (uint => bool) public tokenTaken;
 
-    mapping (uint => uint[]) public requestToTokenTypeMap;
-    mapping (uint => address) public requestToUserMap;
+    mapping (bytes32 => uint[]) public requestToTokenTypeMap;
+    mapping (bytes32 => address) public requestToUserMap;
 
     bytes32  internal keyHash;// = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
     uint256  internal fee;// = 0.0001 * 10 **18;
@@ -48,8 +48,8 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
             string memory name,
             string memory symbol,
             address _tokenAddress,
-            address _designatedSigner,
-            uint64 subscriptionId) external initializer {
+            address _designatedSigner
+            ) external initializer {
                 __ERC721_init(name,symbol);
                 __Ownable_init();
                 __SustainSigner_init(domain, version);
@@ -60,44 +60,37 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
                 tokentierToPrice= [0,10 ether, 25 ether, 50 ether];
                 tokenIdToTokenAllocation= [0,0,5000,10000];
                 requestConfirmations = 3;
-                keyHash = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
-                fee = 0.0001 * 10 **18;
-                vrfCoordinator = 0x6168499c0cFfCaCD319c818142124B7A15E857ab;
-                 __Chianlink_init(vrfCoordinator);
-                callbackGasLimit = 100000;
-                COORDINATOR = VRFCoordinatorV2Interface(vrfCoordinator);
-                s_owner = msg.sender;
-                s_subscriptionId = subscriptionId;
+                __VRFInit_(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed,0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
+                keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
+                fee = 0.0005 ether;
+                vrfCoordinator = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
             }
 
 
-    function requestRandomWords(uint32 randomNumbersRequired,Sustain memory sustain, uint[] memory tokenTypes) public {
-
+    function getRandomNumber(Sustain memory sustain, uint[] memory tokenTypes) public  returns (bytes32){
         require (getSigner(sustain) == designatedSigner,'!Signer');
         require (sustain.userAddress == msg.sender,'!User');
         require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
         require (!nonceUsed[sustain.userAddress][sustain.nonce],'Nonce Used Already');
         nonceUsed[sustain.userAddress][sustain.nonce] = true;
-        s_requestId = COORDINATOR.requestRandomWords(
-            keyHash,
-            s_subscriptionId,
-            requestConfirmations,
-            callbackGasLimit,
-            randomNumbersRequired
-        );
-        requestToTokenTypeMap[s_requestId] = tokenTypes;
-        requestToUserMap[s_requestId] = msg.sender;
+        require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
+        bytes32 data = requestRandomness(keyHash, fee);
+        requestToTokenTypeMap[data] = tokenTypes;
+        requestToUserMap[data] = msg.sender;
+        return data;
     }
 
-    function fulfillRandomWords(
-        uint256 requestId,
-        uint256[] memory randomWords
-    ) internal override {
-        s_randomWords = randomWords;
-        _giveTokens(requestToUserMap[requestId],requestToTokenTypeMap[requestId],randomWords);
+    function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
+        uint randomNumbersRequired = requestToTokenTypeMap[requestId].length;
+        uint[] memory randomNumbers;
+        for (uint i =0;i<randomNumbersRequired;i++) {
+            uint number = randomNumberGenerator(randomness,i);
+            randomNumbers[i] = number;
+        }
+        _giveTokens(requestToUserMap[requestId],requestToTokenTypeMap[requestId],randomNumbers);
     }
 
-    function _giveTokens(address _user, uint[] memory tokenTypes, uint[] memory randomNumbers) internal {
+    function _giveTokens(address _user, uint[] memory tokenTypes, uint[] memory randomNumbers) public {
         for (uint i=0;i< tokenTypes.length;i++){
                 uint tokenId = getTokenNumber(tokenTypes[i],randomNumbers[i]);
                 tokentier[tokenId] = tokenTypes[i];
@@ -114,9 +107,12 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
 
         bool status;
         while(!status){
-            randomNumber++;
+
             if (!tokenTaken[randomNumber]){
                     status = true;
+            }
+            else{
+                randomNumber++;
             }
         }
         return randomNumber;
@@ -127,7 +123,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
         uint totalRewardGenerated;
         for (uint i=0;i< tokenIds.length;i++) {
                 require (user == ownerOf(tokenIds[i]),'!Owner');
-                uint timeDelta = (block.timestamp - lastClaimTime[tokenIds[i]])/ globalTimeDelta ;
+                uint timeDelta = (block.timestamp - lastClaimTime[tokenIds[i]])/ rebaseTime ;
                 uint rewardGenerated = ((timeDelta * rewardRate[tokentier[tokenIds[i]]])* 1 ether) / 100;
                 totalRewardGenerated += rewardGenerated;
         }
@@ -154,7 +150,14 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
         uint amount = getRewards(tokenId,sustain.userAddress);
         token.transfer(msg.sender,amount-tokentier[sustain.tokenId]);
         lastClaimTime[sustain.tokenId] = block.timestamp;
-        requestRandomWords(1,sustain,tokenTier);
+        getRandomNumber(sustain,tokenTier);
+    }
+
+
+    function randomNumberGenerator (uint _randomNumber, uint nonce) internal returns (uint) {
+        uint randomNumber = uint(keccak256(abi.encodePacked(block.number, block.difficulty,  _randomNumber, nonce)));
+        randomNonce = string(abi.encodePacked(block.number, block.difficulty, randomNonce));
+        return randomNumber;
     }
 
     function addDesignatedSigner(address _signer) external onlyOwner {
@@ -168,4 +171,17 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     function withDrawToken () external onlyOwner {
         token.transfer(owner(),token.balanceOf(address(this)));
     }
+
+    function changeSubscriptionID (uint64 id) external onlyOwner {
+        s_subscriptionId = id;
+    }
+
+    function changeRebaseTime (uint time) external onlyOwner {
+        rebaseTime = time;
+    }
+
+    function changeToken(address _tokenAddress) external onlyOwner {
+        token = IERC20Upgradeable(_tokenAddress);
+    }
 }
+
