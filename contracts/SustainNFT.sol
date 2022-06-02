@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "./SustainSigner.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRFConsumerBase{
@@ -38,9 +37,9 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
 
     bytes32  internal keyHash;// = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
     uint256  internal fee;// = 0.0001 * 10 **18;
-    address vrfCoordinator; // = 0x6168499c0cFfCaCD319c818142124B7A15E857ab;
-    uint32 callbackGasLimit; //= 100000;
-    uint16 requestConfirmations;// = 3;
+//    address vrfCoordinator; // = 0x6168499c0cFfCaCD319c818142124B7A15E857ab;
+//    uint32 callbackGasLimit; //= 100000;
+//    uint16 requestConfirmations;// = 3;
 
     function initialize (
             string memory domain,
@@ -59,11 +58,11 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
                 rewardRate= [0,10,25,50];
                 tokentierToPrice= [0,10 ether, 25 ether, 50 ether];
                 tokenIdToTokenAllocation= [0,0,5000,10000];
-                requestConfirmations = 3;
-                __VRFInit_(0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed,0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
-                keyHash = 0x4b09e658ed251bcafeebbc69400383d49f344ace09b9576fe248bb02c003fe9f;
+//                requestConfirmations = 3;
+                __VRFInit_(0x8C7382F9D8f56b33781fE506E897a4F1e2d17255,0x326C977E6efc84E512bB9C30f76E30c160eD06FB);
+                keyHash = 0x6e75b569a01ef56d18cab6a8e71e6600d6ce853834d4a5748b720d06f878b3a4;
                 fee = 0.0005 ether;
-                vrfCoordinator = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
+//                vrfCoordinator = 0x7a1BaC17Ccc5b313516C5E16fb24f7659aA5ebed;
             }
 
 

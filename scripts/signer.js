@@ -12,7 +12,7 @@ async  function signTransaction(
         name: "STAKING",
         version: "1",
         chainId: 80001, //put the chain id
-        verifyingContract: '0xFAb6978C98d2D085Ff033Bda8461dCf8D4945166', //contract address
+        verifyingContract: '0x299Cad7e9Eb142FcA1ef494292a518b0F7F35E04', //contract address
     };
 
     const types = {

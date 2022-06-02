@@ -9,9 +9,8 @@ async function main() {
         "1",
         "ARNAB",
         'ARNAB',
-        "0xb82f344d01A7Fae318fB5287c0eb80F04121ab51",
-        "0xb82f344d01A7Fae318fB5287c0eb80F04121ab51",
-        450
+        "0x6d97825c13cd633E0a596cA4AEBeb6a9Dda52884",
+        "0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60"
     ],{initializer:'initialize'})
   await deployContract.deployed()
   console.log(deployContract.address)
