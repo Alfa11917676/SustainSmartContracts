@@ -78,8 +78,8 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
         else
         require (msg.value == amount,'Amount not paid');
 
-        if(_interestAmount>0){
-            interestPaid[collateralNftId] = _interestAmount;
+        if(_interestAmount>0) {
+            interestPaid[collateralNftId] += _interestAmount;
             sustainToken.transferFrom(msg.sender, address(this), _interestAmount);
         }
         loanRepaid[msg.sender][collateralNftId][tokenIdToLoanCurrency[collateralNftId]]+=amount;
