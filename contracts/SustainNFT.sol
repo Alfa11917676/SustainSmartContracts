@@ -139,19 +139,18 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
         token.transfer(msg.sender, totalRewardGenerated);
     }
 
-    function mintTokensFromReward (Sustain memory sustain, uint _tokenTier) external {
-        uint[] memory tokenId;
-        uint[] memory tokenTier;
-        tokenId[0] = sustain.tokenId;
-        tokenTier[0] = _tokenTier;
-        require(getRewards(tokenId,sustain.userAddress)>tokentierToPrice[_tokenTier],'Minimum amount not satisfied');
-        require (msg.sender == sustain.userAddress,'!User');
-        require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
-        uint amount = getRewards(tokenId,sustain.userAddress);
-        token.transfer(msg.sender,amount-tokentierToPrice[_tokenTier]);
-        lastClaimTime[sustain.tokenId] = block.timestamp;
-        getRandomNumber(sustain,tokenTier);
-    }
+        function mintTokensFromReward (Sustain memory sustain, uint[1] memory _tokenTier) external {
+            uint[] memory tokenIds;
+            uint[] memory tokenTier;
+            tokenIds[0] = sustain.tokenId;
+            tokenTier[0] = _tokenTier[0];
+            uint tier  = tokenTier[0];
+            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[tier],'Minimum amount not satisfied');
+            uint amount = getRewards(tokenIds,sustain.userAddress);
+            token.transfer(msg.sender,amount-tokentierToPrice[tier]);
+            lastClaimTime[sustain.tokenId] = block.timestamp;
+            getRandomNumber(sustain,tokenTier);
+        }
 
 
     function randomNumberGenerator (uint _randomNumber, uint nonce) internal returns (uint) {
@@ -172,9 +171,9 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
         token.transfer(owner(),token.balanceOf(address(this)));
     }
 
-    function changeRebaseTime (uint time) external onlyOwner {
-        rebaseTime = time;
-    }
+        function changeRebaseTime (uint time) external onlyOwner {
+            rebaseTime = time;
+        }
 
     function changeToken(address _tokenAddress) external onlyOwner {
         token = IERC20Upgradeable(_tokenAddress);
