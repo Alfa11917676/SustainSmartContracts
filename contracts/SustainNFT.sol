@@ -140,14 +140,13 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     }
 
         function mintTokensFromReward (Sustain memory sustain, uint[1] memory _tokenTier) external {
-            uint[] memory tokenIds;
-            uint[] memory tokenTier;
+            uint[] memory tokenIds = new uint[](1);
+            uint[] memory tokenTier= new uint[](1);
             tokenIds[0] = sustain.tokenId;
             tokenTier[0] = _tokenTier[0];
-            uint tier  = tokenTier[0];
-            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[tier],'Minimum amount not satisfied');
+            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[_tokenTier[0]],'Minimum amount not satisfied');
             uint amount = getRewards(tokenIds,sustain.userAddress);
-            token.transfer(msg.sender,amount-tokentierToPrice[tier]);
+            token.transfer(msg.sender,amount);
             lastClaimTime[sustain.tokenId] = block.timestamp;
             getRandomNumber(sustain,tokenTier);
         }

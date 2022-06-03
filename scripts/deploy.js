@@ -4,20 +4,20 @@ const {signTransaction} = require("./signer")
 async function main() {
 
   const SustainNFT = await hre.ethers.getContractFactory('SustainNFT')
-  // const upgrade = await upgrades.upgradeProxy('0xa987bfbf017fd318b4CA4B9ea119003723c27d51',SustainNFT)
-  //   await upgrade.deployed()
-  //   console.log(upgrade.address)
+  const upgrade = await upgrades.upgradeProxy('0x7ffb34739F9b5bb4EdA8375d670eF4a9002Aa038',SustainNFT)
+    await upgrade.deployed()
+    console.log(upgrade.address)
 
-      const deployContract = await hre.upgrades.deployProxy(SustainNFT,[
-        "STAKING",
-        "1",
-        "SUSTAIN_TOKEN",
-        'SUT',
-        "0x6d97825c13cd633E0a596cA4AEBeb6a9Dda52884",
-        "0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60"
-    ],{initializer:'initialize'})
-  await deployContract.deployed()
-  console.log(deployContract.address)
+    //   const deployContract = await hre.upgrades.deployProxy(SustainNFT,[
+    //     "STAKING",
+    //     "1",
+    //     "SUSTAIN_TOKEN",
+    //     'SUT',
+    //     "0x6d97825c13cd633E0a596cA4AEBeb6a9Dda52884",
+    //     "0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60"
+    // ],{initializer:'initialize'})
+  // await deployContract.deployed()
+  // console.log(deployContract.address)
 
 
     //   const deployToken = await ethers.getContractFactory('sustainToken')
