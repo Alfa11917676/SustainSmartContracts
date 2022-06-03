@@ -7,7 +7,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./Sustain_Lender_Staker_Contract_Signer.sol";
 import "./ABDKMath64x64.sol";
-contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable  {
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable,IERC721Receiver  {
 
     IERC721Upgradeable nft;
     IERC20Upgradeable sustainToken;
@@ -174,6 +175,15 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
 
     function getTotalTokenStakingPerUser(address _user) external view returns(uint[] memory) {
         return tokensStakedPerOwner[_user];
+    }
+    
+       function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public  pure virtual override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 
 }
