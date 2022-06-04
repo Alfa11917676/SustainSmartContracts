@@ -66,7 +66,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         nft = IERC721Upgradeable(nftAddress);
     }
 
-    function calculateInterest(uint tokenId) public returns (uint) {
+    function calculateInterest(uint tokenId) public view returns (uint) {
             uint principleAMount = loanHelper[tokenId].principleToPayEachInterval;
             uint interestPercent = loanHelper[tokenId].interestPercent;
             uint lastPaid = loanHelper[tokenId].lastPaymentTime;
@@ -95,7 +95,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         info.paymentSplit = wrapped.paymentPartition;
         info.timeInterval = wrapped.minimumTime;
         info.principleTaken = wrapped.loanAmount;
-        info.interestDue = wrapped.interestAmount;
+        info.interestPercent = wrapped.interestPercent;
         info.principleToPayEachInterval = wrapped.loanAmount/wrapped.paymentPartition;
         loanHelper[wrapped.nftId] = info;
         if (wrapped.inStableCoin)
@@ -104,9 +104,9 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         payable(msg.sender).transfer(wrapped.loanAmount);
     }
 
-    function payBackAmount (uint collateralNftId, uint amount) external payable nonReentrant {
+    function payBackAmount (uint collateralNftId) external payable nonReentrant {
         require (tokenLendingOwner[collateralNftId]==msg.sender,'!Owner of asset');
-        if(tokenIdToLoanCurrency[collateralNftId])
+        if(loanHelper[collateralNftId].currencyMode)
         stableToken.transferFrom(msg.sender, address(this), loanHelper[collateralNftId].principleToPayEachInterval);
         else
         require (msg.value == loanHelper[collateralNftId].principleToPayEachInterval,'Amount not paid');

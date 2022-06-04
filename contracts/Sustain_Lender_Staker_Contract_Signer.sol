@@ -33,11 +33,13 @@ contract Sustain_Lender_Staker_Signer is EIP712Upgradeable{
 
     function _hash(WrappedSustain memory sustain) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
-                keccak256("WrappedSustain(address userAddress,uint256 nftId,uint256 loanAmount,uint256 loanAmount,uint256 interestAmount,uint256 apr,bool inStableCoin,uint256 nonce)"),
+                keccak256("WrappedSustain(address userAddress,uint256 nftId,uint256 minimumTime,uint256 paymentPartition,uint256 loanAmount,uint256 loanAmount,uint256 interestPercent,uint256 apr,bool inStableCoin,uint256 nonce)"),
                     sustain.userAddress,
                     sustain.nftId,
+                    sustain.minimumTime,
+                    sustain.paymentPartition,
                     sustain.loanAmount,
-                    sustain.interestAmount,
+                    sustain.interestPercent,
                     sustain.apr,
                     sustain.inStableCoin,
                     sustain.nonce
