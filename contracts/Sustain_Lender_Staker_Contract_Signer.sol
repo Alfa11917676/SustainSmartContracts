@@ -9,8 +9,10 @@ contract Sustain_Lender_Staker_Signer is EIP712Upgradeable{
     struct WrappedSustain{
         address userAddress;
         uint nftId;
+        uint minimumTime;
+        uint paymentPartition;
         uint loanAmount;
-        uint interestAmount;
+        uint interestPercent; //should be sent by multiplying with 100. Eg: If want to send 20% should send 20000
         uint apr; // value in wei
         bool inStableCoin;
         uint nonce;

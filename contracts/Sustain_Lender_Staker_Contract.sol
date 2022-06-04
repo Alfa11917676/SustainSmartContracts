@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./Sustain_Lender_Staker_Contract_Signer.sol";
 import "./ABDKMath64x64.sol";
-contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable  {
+contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable  {
 
     IERC721Upgradeable nft;
     IERC20Upgradeable sustainToken;
@@ -20,7 +20,28 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
         address owner;
     }
 
+    struct loanInfo {
+        bool currencyMode;
+        uint timeInterval;
+        uint paymentSplit;
+        uint paymentMade;
+        uint lastPaymentTime;
+        uint principleTaken;
+        uint interestPercent;
+        uint principlePaid;
+        uint interestPaid;
+        uint principleToPayEachInterval;
+        address owner;
+    }
+
+    mapping (uint => loanInfo) public loanHelper;
+
+
+    uint public penaltyPercent;
     address public designatedSigner;
+    // userAddress => nft => paymentInfo[]
+    mapping (address => mapping (uint => uint[])) public repaymentOfPrincipleSplitInfo;
+    mapping (address => mapping (uint => uint[])) public repaymentOfInterestSplitInfo;
     // true => stable coin, false => native
     // userAddress => nftId =>  true/false => amount
     mapping(address => mapping (uint => mapping (bool => uint))) public loanTaken;
@@ -53,6 +74,18 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
         nft = IERC721Upgradeable(nftAddress);
     }
 
+    function calculateInterest(uint tokenId) internal returns (uint) {
+            uint principleAMount = loanHelper[tokenId].principleToPayEachInterval;
+            uint interestPercent = loanHelper[tokenId].interestPercent;
+            uint lastPaid = loanHelper[tokenId].lastPaymentTime;
+            uint timeInterval = loanHelper[tokenId].timeInterval;
+            uint timeTaken = block.timestamp - lastPaid; // total time taken to pay the next part of debt
+            uint interestIncreased = timeTaken / timeInterval;
+            uint finalInterest = interestPercent + (interestIncreased - 1) * penaltyPercent;
+            uint interestAmount = principleAMount * finalInterest / 10000;
+            return interestAmount;
+    }
+
     function loanToken(WrappedSustain memory wrapped) external nonReentrant{
         require (msg.sender == wrapped.userAddress,'!User');
         require(wrapped.nonce+ 10 minutes >= block.timestamp,'!Signature Expired');
@@ -61,27 +94,33 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
         nonceUsed[msg.sender][wrapped.nonce] = true;
         nft.safeTransferFrom(wrapped.userAddress,address(this),wrapped.nftId);
         tokensLendingPerOwner[msg.sender].push(wrapped.nftId);
-        loanTaken[wrapped.userAddress][wrapped.nftId][wrapped.inStableCoin] = wrapped.loanAmount;
         tokenLendingOwner[wrapped.nftId] = wrapped.userAddress;
-        tokenIdToLoanCurrency[wrapped.nftId] = wrapped.inStableCoin;
-        interestAmount[wrapped.nftId] = wrapped.interestAmount;
+        loanInfo memory info;
+        info.owner = msg.sender;
+        info.currencyMode = wrapped.inStableCoin;
+        info.lastPaymentTime = block.timestamp;
+        info.paymentMade = 0;
+        info.paymentSplit = wrapped.paymentPartition;
+        info.timeInterval = wrapped.minimumTime;
+        info.principleTaken = wrapped.loanAmount;
+        info.interestDue = wrapped.interestAmount;
+        info.principleToPayEachInterval = wrapped.loanAmount/wrapped.paymentPartition;
+        loanHelper[wrapped.nftId] = info;
         if (wrapped.inStableCoin)
         stableToken.transfer(wrapped.userAddress,wrapped.loanAmount);
         else
         payable(msg.sender).transfer(wrapped.loanAmount);
     }
 
-    function payBackAmount (uint collateralNftId, uint amount, uint _interestAmount) external payable nonReentrant {
+    function payBackAmount (uint collateralNftId, uint amount) external payable nonReentrant {
         require (tokenLendingOwner[collateralNftId]==msg.sender,'!Owner of asset');
         if(tokenIdToLoanCurrency[collateralNftId])
-        stableToken.transferFrom(msg.sender, address(this), amount);
+        stableToken.transferFrom(msg.sender, address(this), loanHelper[collateralNftId].principleToPayEachInterval);
         else
-        require (msg.value == amount,'Amount not paid');
-
-        if(_interestAmount>0) {
-            interestPaid[collateralNftId] += _interestAmount;
-            sustainToken.transferFrom(msg.sender, address(this), _interestAmount);
-        }
+        require (msg.value == loanHelper[collateralNftId].principleToPayEachInterval,'Amount not paid');
+        uint interestAmount = calculateInterest(collateralNftId);
+        sustainToken.transferFrom(msg.sender, address(this), interestAmount);
+        interestPaid[collateralNftId] += interestAmount;
         loanRepaid[msg.sender][collateralNftId][tokenIdToLoanCurrency[collateralNftId]]+=amount;
     }
 
@@ -116,6 +155,12 @@ contract WrappedSustainNFTTokens is OwnableUpgradeable, Sustain_Lender_Staker_Si
 
     function setDesignatedSigner (address _signer) external onlyOwner {
         designatedSigner = _signer;
+    }
+
+    //@dev This percentage should be given by multiplying 100 with it
+    //@dev Eg: If I have to give 2.5%, I will pass 250
+    function setPenaltyPercent(uint _amount) external onlyOwner {
+        penaltyPercent = _amount;
     }
 
     function getTotalTokenLendingPerUser(address _user) external view returns(uint[] memory) {
