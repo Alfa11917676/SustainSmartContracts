@@ -34,24 +34,16 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         address owner;
     }
 
-    mapping (uint => loanInfo) public loanHelper;
 
 
     uint public penaltyPercent;
     address public designatedSigner;
+    mapping (uint => loanInfo) public loanHelper;
     // userAddress => nft => paymentInfo[]
     mapping (address => mapping (uint => uint[])) public repaymentOfPrincipleSplitInfo;
     mapping (address => mapping (uint => uint[])) public repaymentOfInterestSplitInfo;
     // true => stable coin, false => native
-    // userAddress => nftId =>  true/false => amount
-    mapping(address => mapping (uint => mapping (bool => uint))) public loanTaken;
-    // userAddress => nftId =>  true/false => amount
-    mapping(address => mapping (uint =>  mapping (bool => uint))) public loanRepaid;
-    mapping (uint => bool) public tokenIdToLoanCurrency;
-    // info about tokens locked for lending
     mapping(uint => address) public tokenLendingOwner;
-    mapping (uint => uint) public interestAmount;
-    mapping (uint => uint) public interestPaid;
     mapping (address => mapping (uint => bool)) public nonceUsed;
     // info about tokens locked for staking
     mapping (uint => address) public tokenStakingOwner;
@@ -74,7 +66,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         nft = IERC721Upgradeable(nftAddress);
     }
 
-    function calculateInterest(uint tokenId) internal returns (uint) {
+    function calculateInterest(uint tokenId) public returns (uint) {
             uint principleAMount = loanHelper[tokenId].principleToPayEachInterval;
             uint interestPercent = loanHelper[tokenId].interestPercent;
             uint lastPaid = loanHelper[tokenId].lastPaymentTime;
@@ -120,14 +112,20 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         require (msg.value == loanHelper[collateralNftId].principleToPayEachInterval,'Amount not paid');
         uint interestAmount = calculateInterest(collateralNftId);
         sustainToken.transferFrom(msg.sender, address(this), interestAmount);
-        interestPaid[collateralNftId] += interestAmount;
-        loanRepaid[msg.sender][collateralNftId][tokenIdToLoanCurrency[collateralNftId]]+=amount;
+        loanHelper[collateralNftId].lastPaymentTime = block.timestamp;
+        loanHelper[collateralNftId].principlePaid+=loanHelper[collateralNftId].principleToPayEachInterval;
+        loanHelper[collateralNftId].paymentMade+=1;
+        loanHelper[collateralNftId].interestPaid+=interestAmount;
+    }
+
+    function bulkRepayment(uint collateralNftId, uint howManyTerms) external payable nonReentrant {
+        // to be continued...
     }
 
     function withdrawAsset (uint collateralNFTId) external {
         require (tokenLendingOwner[collateralNFTId]==msg.sender,'!Owner');
-        require (loanRepaid[msg.sender][collateralNFTId][tokenIdToLoanCurrency[collateralNFTId]] >= loanTaken[msg.sender][collateralNFTId][tokenIdToLoanCurrency[collateralNFTId]],'Loan Not Repaid');
-        require (interestAmount[collateralNFTId] == interestPaid[collateralNFTId],'Interest Not Paid');
+        require (loanHelper[collateralNFTId].paymentMade==loanHelper[collateralNFTId].paymentSplit,'Not repaid');
+        delete loanHelper[collateralNFTId];
         delete tokenLendingOwner[collateralNFTId];
         nft.transferFrom(address(this), msg.sender, collateralNFTId);
     }
