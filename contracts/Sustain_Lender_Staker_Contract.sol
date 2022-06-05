@@ -38,23 +38,26 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
 
     uint public penaltyPercent;
     address public designatedSigner;
-    mapping (uint => loanInfo) public loanHelper;
+
+    // tokenId => nftAddress => Struct
+    mapping (uint => mapping (address => loanInfo)) public loanHelper;
     // userAddress => nft => paymentInfo[]
     mapping (address => mapping (uint => uint[])) public repaymentOfPrincipleSplitInfo;
     mapping (address => mapping (uint => uint[])) public repaymentOfInterestSplitInfo;
-    // true => stable coin, false => native
-    mapping(uint => address) public tokenLendingOwner;
+    // tokenId => nftContractAddress => ownerAddress
+    mapping(uint => mapping (address => address)) public tokenLendingOwner;
     mapping (address => mapping (uint => bool)) public nonceUsed;
     // info about tokens locked for staking
     mapping (uint => address) public tokenStakingOwner;
-    mapping (address => uint[]) public tokensStakedPerOwner;
-    mapping (address => uint[]) public tokensLendingPerOwner;
+    // ownerAddress => nftAddress => tokenId[]
+    mapping (address => mapping (address => uint[])) public tokensStakedPerOwner;
+    mapping (address => mapping (address => uint[])) public tokensLendingPerOwner;
     mapping (uint => tokenInfo) public stakeInfo;
 
     function initialize (
         string memory domain,
         string memory version,
-        address nftAddress,
+        address sustainNftAddress,
         address _stableAddress,
         address _sustainAddress
     ) external initializer {
@@ -63,14 +66,14 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         __WrappedSustainSignature_init(domain, version);
         stableToken = IERC20Upgradeable(_stableAddress);
         sustainToken = IERC20Upgradeable(_sustainAddress);
-        nft = IERC721Upgradeable(nftAddress);
+        nft = IERC721Upgradeable(sustainNftAddress);
     }
 
-    function calculateInterest(uint tokenId) public view returns (uint) {
-            uint principleAMount = loanHelper[tokenId].principleToPayEachInterval;
-            uint interestPercent = loanHelper[tokenId].interestPercent;
-            uint lastPaid = loanHelper[tokenId].lastPaymentTime;
-            uint timeInterval = loanHelper[tokenId].timeInterval;
+    function calculateInterest(uint tokenId, address _nftAddress) public view returns (uint) {
+            uint principleAMount = loanHelper[tokenId][_nftAddress].principleToPayEachInterval;
+            uint interestPercent = loanHelper[tokenId][_nftAddress].interestPercent;
+            uint lastPaid = loanHelper[tokenId][_nftAddress].lastPaymentTime;
+            uint timeInterval = loanHelper[tokenId][_nftAddress].timeInterval;
             uint timeTaken = block.timestamp - lastPaid; // total time taken to pay the next part of debt
             uint interestIncreased = timeTaken / timeInterval;
             uint finalInterest = interestPercent + (interestIncreased - 1) * penaltyPercent;
@@ -84,9 +87,9 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         require (getSigner(wrapped) == designatedSigner);
         require (!nonceUsed[msg.sender][wrapped.nonce],'Nonce Used Already');
         nonceUsed[msg.sender][wrapped.nonce] = true;
-        nft.safeTransferFrom(wrapped.userAddress,address(this),wrapped.nftId);
-        tokensLendingPerOwner[msg.sender].push(wrapped.nftId);
-        tokenLendingOwner[wrapped.nftId] = wrapped.userAddress;
+        IERC721Upgradeable(wrapped.nftAddress).safeTransferFrom(wrapped.userAddress,address(this),wrapped.nftId);
+        tokensLendingPerOwner[msg.sender][wrapped.nftAddress].push(wrapped.nftId);
+        tokenLendingOwner[wrapped.nftId][wrapped.nftAddress] = wrapped.userAddress;
         loanInfo memory info;
         info.owner = msg.sender;
         info.currencyMode = wrapped.inStableCoin;
@@ -97,37 +100,49 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         info.principleTaken = wrapped.loanAmount;
         info.interestPercent = wrapped.interestPercent;
         info.principleToPayEachInterval = wrapped.loanAmount/wrapped.paymentPartition;
-        loanHelper[wrapped.nftId] = info;
+        loanHelper[wrapped.nftId][wrapped.nftAddress] = info;
         if (wrapped.inStableCoin)
         stableToken.transfer(wrapped.userAddress,wrapped.loanAmount);
         else
         payable(msg.sender).transfer(wrapped.loanAmount);
     }
 
-    function payBackAmount (uint collateralNftId) external payable nonReentrant {
-        require (tokenLendingOwner[collateralNftId]==msg.sender,'!Owner of asset');
-        if(loanHelper[collateralNftId].currencyMode)
-        stableToken.transferFrom(msg.sender, address(this), loanHelper[collateralNftId].principleToPayEachInterval);
+    function payBackAmount (uint collateralNftId, address _nftContractAddress) external payable nonReentrant {
+        require (tokenLendingOwner[collateralNftId][_nftContractAddress]==msg.sender,'!Owner of asset');
+        if(loanHelper[collateralNftId][_nftContractAddress].currencyMode)
+        stableToken.transferFrom(msg.sender, address(this), loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval);
         else
-        require (msg.value == loanHelper[collateralNftId].principleToPayEachInterval,'Amount not paid');
-        uint interestAmount = calculateInterest(collateralNftId);
+        require (msg.value == loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval,'Amount not paid');
+        uint interestAmount = calculateInterest(collateralNftId,_nftContractAddress);
         sustainToken.transferFrom(msg.sender, address(this), interestAmount);
-        loanHelper[collateralNftId].lastPaymentTime = block.timestamp;
-        loanHelper[collateralNftId].principlePaid+=loanHelper[collateralNftId].principleToPayEachInterval;
-        loanHelper[collateralNftId].paymentMade+=1;
-        loanHelper[collateralNftId].interestPaid+=interestAmount;
+        loanHelper[collateralNftId][_nftContractAddress].lastPaymentTime = block.timestamp;
+        loanHelper[collateralNftId][_nftContractAddress].principlePaid+=loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval;
+        loanHelper[collateralNftId][_nftContractAddress].paymentMade+=1;
+        loanHelper[collateralNftId][_nftContractAddress].interestPaid+=interestAmount;
     }
 
-    function bulkRepayment(uint collateralNftId, uint howManyTerms) external payable nonReentrant {
-        // to be continued...
+    function bulkRepayment(uint collateralNftId, address _nftContractAddress, uint howManyTerms) external payable nonReentrant {
+        for (uint i= 0;i< howManyTerms; i++) {
+            require (tokenLendingOwner[collateralNftId][_nftContractAddress] == msg.sender,'!Owner of asset');
+            if (loanHelper[collateralNftId][_nftContractAddress].currencyMode)
+            stableToken.transferFrom(msg.sender, address (this), loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval);
+            else
+            require (loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval * howManyTerms == msg.value,'Correct Amount Not Paid');
+            uint interestAmount = calculateInterest(collateralNftId,_nftContractAddress);
+            sustainToken.transferFrom(msg.sender, address (this), interestAmount);
+            loanHelper[collateralNftId][_nftContractAddress].lastPaymentTime = block.timestamp;
+            loanHelper[collateralNftId][_nftContractAddress].principlePaid += loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval;
+            loanHelper[collateralNftId][_nftContractAddress].paymentMade+=1;
+            loanHelper[collateralNftId][_nftContractAddress].interestPaid += interestAmount;
+        }
     }
 
-    function withdrawAsset (uint collateralNFTId) external {
-        require (tokenLendingOwner[collateralNFTId]==msg.sender,'!Owner');
-        require (loanHelper[collateralNFTId].paymentMade==loanHelper[collateralNFTId].paymentSplit,'Not repaid');
-        delete loanHelper[collateralNFTId];
-        delete tokenLendingOwner[collateralNFTId];
-        nft.transferFrom(address(this), msg.sender, collateralNFTId);
+    function withdrawAsset (uint collateralNFTId, address _nftContractAddress) external {
+        require (tokenLendingOwner[collateralNFTId][_nftContractAddress]==msg.sender,'!Owner');
+        require (loanHelper[collateralNFTId][_nftContractAddress].paymentMade==loanHelper[collateralNFTId][_nftContractAddress].paymentSplit,'Not repaid');
+        delete loanHelper[collateralNFTId][_nftContractAddress];
+        delete tokenLendingOwner[collateralNFTId][_nftContractAddress];
+        IERC721Upgradeable(_nftContractAddress).transferFrom(address(this), msg.sender, collateralNFTId);
     }
 
     function withDrawToken () external onlyOwner {
@@ -139,16 +154,16 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         payable(owner()).transfer(address(this).balance);
     }
 
-    function withDrawNFT (uint[] memory nftIds) external onlyOwner {
+    function withDrawNFT (uint[] memory nftIds,address[] memory nftAddress) external onlyOwner {
         for (uint i =0; i< nftIds.length; i++) {
-            nft.transferFrom(address(this), owner(), nftIds[i]);
+            IERC721Upgradeable(nftAddress[i]).transferFrom(address(this), owner(), nftIds[i]);
         }
     }
 
-    function setCryptoAddresses (address sustainToken_, address stableToken_, address nftAddress) external onlyOwner {
+    function setCryptoAddresses (address sustainToken_, address stableToken_, address _nftAddress) external onlyOwner {
         sustainToken = IERC20Upgradeable(sustainToken_);
         stableToken = IERC20Upgradeable(stableToken_);
-        nft = IERC721Upgradeable(nftAddress);
+        nft = IERC721Upgradeable(_nftAddress);
     }
 
     function setDesignatedSigner (address _signer) external onlyOwner {
@@ -161,8 +176,8 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         penaltyPercent = _amount;
     }
 
-    function getTotalTokenLendingPerUser(address _user) external view returns(uint[] memory) {
-        return tokensLendingPerOwner[_user];
+    function getTotalTokenLendingPerUser(address _user, address _nftAddress) external view returns(uint[] memory) {
+        return tokensLendingPerOwner[_user][_nftAddress];
     }
 
     // STAKING IMPLEMENTATION //
@@ -173,7 +188,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
             require (signer[i].userAddress == msg.sender,'!User');
             require (nft.ownerOf(tokenIds[i]) == msg.sender,'!NFT_Owner');
             tokenStakingOwner[tokenIds[i]] = msg.sender;
-            tokensStakedPerOwner[msg.sender].push(tokenIds[i]);
+            tokensStakedPerOwner[msg.sender][signer[i].nftAddress].push(tokenIds[i]);
             tokenInfo memory info;
             info.owner = msg.sender;
             info.stakeTime = block.timestamp;
@@ -215,8 +230,8 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         }
     }
 
-    function getTotalTokenStakingPerUser(address _user) external view returns(uint[] memory) {
-        return tokensStakedPerOwner[_user];
+    function getTotalTokenStakingPerUser(address _user, address _nftAddress) external view returns(uint[] memory) {
+        return tokensStakedPerOwner[_user][_nftAddress];
     }
 
 }

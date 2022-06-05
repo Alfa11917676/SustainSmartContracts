@@ -8,6 +8,7 @@ contract Sustain_Lender_Staker_Signer is EIP712Upgradeable{
 
     struct WrappedSustain{
         address userAddress;
+        address nftAddress;
         uint nftId;
         uint minimumTime;
         uint paymentPartition;
@@ -33,8 +34,9 @@ contract Sustain_Lender_Staker_Signer is EIP712Upgradeable{
 
     function _hash(WrappedSustain memory sustain) internal view returns (bytes32) {
         return _hashTypedDataV4(keccak256(abi.encode(
-                keccak256("WrappedSustain(address userAddress,uint256 nftId,uint256 minimumTime,uint256 paymentPartition,uint256 loanAmount,uint256 loanAmount,uint256 interestPercent,uint256 apr,bool inStableCoin,uint256 nonce)"),
+                keccak256("WrappedSustain(address userAddress,address nftAddress,uint256 nftId,uint256 minimumTime,uint256 paymentPartition,uint256 loanAmount,uint256 loanAmount,uint256 interestPercent,uint256 apr,bool inStableCoin,uint256 nonce)"),
                     sustain.userAddress,
+                    sustain.nftAddress,
                     sustain.nftId,
                     sustain.minimumTime,
                     sustain.paymentPartition,
