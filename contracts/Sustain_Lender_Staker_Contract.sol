@@ -7,8 +7,9 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "./Sustain_Lender_Staker_Contract_Signer.sol";
 import "./ABDKMath64x64.sol";
+import "hardhat/console.sol";
 contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Signer, ReentrancyGuardUpgradeable  {
-
+    bytes4 private constant _ERC721_RECEIVED = 0x150b7a02;
     IERC721Upgradeable nft;
     IERC20Upgradeable sustainToken;
     IERC20Upgradeable stableToken;
@@ -75,7 +76,11 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
             uint lastPaid = loanHelper[tokenId][_nftAddress].lastPaymentTime;
             uint timeInterval = loanHelper[tokenId][_nftAddress].timeInterval;
             uint timeTaken = block.timestamp - lastPaid; // total time taken to pay the next part of debt
-            uint interestIncreased = timeTaken / timeInterval;
+            uint interestIncreased;
+            if (timeTaken > timeInterval)
+            interestIncreased = timeTaken / timeInterval;
+            else
+            interestIncreased = 1;
             uint finalInterest = interestPercent + (interestIncreased - 1) * penaltyPercent;
             uint interestAmount = principleAMount * finalInterest / 10000;
             return interestAmount;
@@ -94,7 +99,6 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
         info.owner = msg.sender;
         info.currencyMode = wrapped.inStableCoin;
         info.lastPaymentTime = block.timestamp;
-        info.paymentMade = 0;
         info.paymentSplit = wrapped.paymentPartition;
         info.timeInterval = wrapped.minimumTime;
         info.principleTaken = wrapped.loanAmount;
@@ -109,6 +113,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
 
     function payBackAmount (uint collateralNftId, address _nftContractAddress) external payable nonReentrant {
         require (tokenLendingOwner[collateralNftId][_nftContractAddress]==msg.sender,'!Owner of asset');
+        require (loanHelper[collateralNftId][_nftContractAddress].paymentMade+1<=loanHelper[collateralNftId][_nftContractAddress].paymentSplit,'Already Paid Enough');
         if(loanHelper[collateralNftId][_nftContractAddress].currencyMode)
         stableToken.transferFrom(msg.sender, address(this), loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval);
         else
@@ -124,6 +129,7 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
     function bulkRepayment(uint collateralNftId, address _nftContractAddress, uint howManyTerms) external payable nonReentrant {
         for (uint i= 0;i< howManyTerms; i++) {
             require (tokenLendingOwner[collateralNftId][_nftContractAddress] == msg.sender,'!Owner of asset');
+            require (loanHelper[collateralNftId][_nftContractAddress].paymentMade+1<=loanHelper[collateralNftId][_nftContractAddress].paymentSplit,'Already Paid Enough');
             if (loanHelper[collateralNftId][_nftContractAddress].currencyMode)
             stableToken.transferFrom(msg.sender, address (this), loanHelper[collateralNftId][_nftContractAddress].principleToPayEachInterval);
             else
@@ -232,6 +238,17 @@ contract Sustain_Lender_Staker is OwnableUpgradeable, Sustain_Lender_Staker_Sign
 
     function getTotalTokenStakingPerUser(address _user, address _nftAddress) external view returns(uint[] memory) {
         return tokensStakedPerOwner[_user][_nftAddress];
+    }
+
+
+    //@dev Receive the tokens
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) public pure returns (bytes4) {
+        return _ERC721_RECEIVED;
     }
 
 }

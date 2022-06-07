@@ -1,0 +1,429 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    "txHash": "0xb79bb54b661b12a28735478e519dda7f6d35c485605f4efe4548c90790ccfe00"
+  },
+  "proxies": [
+    {
+      "address": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      "txHash": "0xbed7c09a5e76e32f2b627da7256121993fc772a41280581a0c6d8bdeff8eba1f",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "069edc72b59da1ba9ebf8a760fd012c2499dad67248f438d4dec9148ed6ba478": {
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "txHash": "0x897a5a3d70c095ddb32affbcb5e655d3e5fd6dbcfaf2abdaa09bc17683181b44",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:11"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:76"
+          },
+          {
+            "label": "_HASHED_NAME",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol:32"
+          },
+          {
+            "label": "_HASHED_VERSION",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_bytes32",
+            "contract": "EIP712Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol:33"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "EIP712Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol:120"
+          },
+          {
+            "label": "SIGNING_DOMAIN",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_string_storage",
+            "contract": "Sustain_Lender_Staker_Signer",
+            "src": "contracts/Sustain_Lender_Staker_Contract_Signer.sol:6"
+          },
+          {
+            "label": "SIGNATURE_VERSION",
+            "offset": 0,
+            "slot": "154",
+            "type": "t_string_storage",
+            "contract": "Sustain_Lender_Staker_Signer",
+            "src": "contracts/Sustain_Lender_Staker_Contract_Signer.sol:7"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "155",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "156",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:74"
+          },
+          {
+            "label": "nft",
+            "offset": 0,
+            "slot": "205",
+            "type": "t_contract(IERC721Upgradeable)3817",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:13"
+          },
+          {
+            "label": "sustainToken",
+            "offset": 0,
+            "slot": "206",
+            "type": "t_contract(IERC20Upgradeable)2792",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:14"
+          },
+          {
+            "label": "stableToken",
+            "offset": 0,
+            "slot": "207",
+            "type": "t_contract(IERC20Upgradeable)2792",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:15"
+          },
+          {
+            "label": "penaltyPercent",
+            "offset": 0,
+            "slot": "208",
+            "type": "t_uint256",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:40"
+          },
+          {
+            "label": "designatedSigner",
+            "offset": 0,
+            "slot": "209",
+            "type": "t_address",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:41"
+          },
+          {
+            "label": "loanHelper",
+            "offset": 0,
+            "slot": "210",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_struct(loanInfo)11463_storage))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:44"
+          },
+          {
+            "label": "repaymentOfPrincipleSplitInfo",
+            "offset": 0,
+            "slot": "211",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:46"
+          },
+          {
+            "label": "repaymentOfInterestSplitInfo",
+            "offset": 0,
+            "slot": "212",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:47"
+          },
+          {
+            "label": "tokenLendingOwner",
+            "offset": 0,
+            "slot": "213",
+            "type": "t_mapping(t_uint256,t_mapping(t_address,t_address))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:49"
+          },
+          {
+            "label": "nonceUsed",
+            "offset": 0,
+            "slot": "214",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_bool))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:50"
+          },
+          {
+            "label": "tokenStakingOwner",
+            "offset": 0,
+            "slot": "215",
+            "type": "t_mapping(t_uint256,t_address)",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:52"
+          },
+          {
+            "label": "tokensStakedPerOwner",
+            "offset": 0,
+            "slot": "216",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_array(t_uint256)dyn_storage))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:54"
+          },
+          {
+            "label": "tokensLendingPerOwner",
+            "offset": 0,
+            "slot": "217",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_array(t_uint256)dyn_storage))",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:55"
+          },
+          {
+            "label": "stakeInfo",
+            "offset": 0,
+            "slot": "218",
+            "type": "t_mapping(t_uint256,t_struct(tokenInfo)11440_storage)",
+            "contract": "Sustain_Lender_Staker",
+            "src": "contracts/Sustain_Lender_Staker_Contract.sol:56"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IERC20Upgradeable)2792": {
+            "label": "contract IERC20Upgradeable",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IERC721Upgradeable)3817": {
+            "label": "contract IERC721Upgradeable",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(address => uint256[]))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(uint256 => uint256[]))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_bool))": {
+            "label": "mapping(address => mapping(uint256 => bool))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(loanInfo)11463_storage)": {
+            "label": "mapping(address => struct Sustain_Lender_Staker.loanInfo)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_address)": {
+            "label": "mapping(uint256 => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bool)": {
+            "label": "mapping(uint256 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_address))": {
+            "label": "mapping(uint256 => mapping(address => address))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_mapping(t_address,t_struct(loanInfo)11463_storage))": {
+            "label": "mapping(uint256 => mapping(address => struct Sustain_Lender_Staker.loanInfo))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(tokenInfo)11440_storage)": {
+            "label": "mapping(uint256 => struct Sustain_Lender_Staker.tokenInfo)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(loanInfo)11463_storage": {
+            "label": "struct Sustain_Lender_Staker.loanInfo",
+            "members": [
+              {
+                "label": "currencyMode",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "timeInterval",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "paymentSplit",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "paymentMade",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "lastPaymentTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "principleTaken",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "interestPercent",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "principlePaid",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "interestPaid",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "principleToPayEachInterval",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "10"
+              }
+            ],
+            "numberOfBytes": "352"
+          },
+          "t_struct(tokenInfo)11440_storage": {
+            "label": "struct Sustain_Lender_Staker.tokenInfo",
+            "members": [
+              {
+                "label": "stakeTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "lastClaimTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "apr",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}
