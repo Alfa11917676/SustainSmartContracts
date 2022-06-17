@@ -36,10 +36,10 @@ describe('L1, 8080 Locker Contract Test-Suite', async () => {
   });
 
   describe ('Starting The Test Suite For Lending 🤞🏾', async () => {
-    it ('Lend token', async ()=> {
+    it ('Lending The Money', async ()=> {
       const block = await (ethers.getDefaultProvider()).getBlock('latest')
       const time = block.timestamp
-      let signature = await  signTransaction(lender.address,owner.address,nft.address,1,86400,5,ethers.utils.parseEther('100'),2000,1,true,time);
+      let signature = await signTransaction(lender.address,owner.address,nft.address,1,86400,5,ethers.utils.parseEther('100'),2000,1,true,time);
       await lender.loanToken([owner.address,nft.address,1,86400,5,ethers.utils.parseEther('100'),2000,1,true,time,signature])
       let structDetails = await lender.loanHelper(1,nft.address)
       expect (structDetails[0]).to.equal(true)
@@ -63,7 +63,7 @@ describe('L1, 8080 Locker Contract Test-Suite', async () => {
       await network.provider.send("evm_increaseTime", [2*24*3600])
       await lender.payBackAmount(1,nft.address)
       let structDetails = await lender.loanHelper(1,nft.address)
-      expect(fromWei(structDetails[8].toString(),'ether')).to.equal((4+20*70/100).toString())
+      expect(fromWei(structDetails[8].toString(),'ether')).to.equal('18')
     });
 
     it ('Trying to withdraw asset without paying whole amount 👨🏾‍✈️', async() => {
@@ -94,6 +94,14 @@ describe('L1, 8080 Locker Contract Test-Suite', async () => {
       await network.provider.send("evm_increaseTime", [1*24*3600])
       await expect (lender.payBackAmount(1,nft.address)).to.be.reverted;
     });
+
+    it.only ('Minting_NFT', async()=> {
+      let getSig1 = await signTransaction("0x67aC840FB47FB94Ad9EeE2dc9F8ab06dEe553aAF","0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467589,1)
+      let getSig2 = await signTransaction("0x67aC840FB47FB94Ad9EeE2dc9F8ab06dEe553aAF","0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467590,1)
+      let getSig3 = await signTransaction("0x67aC840FB47FB94Ad9EeE2dc9F8ab06dEe553aAF","0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467591,1)
+      console.log([["0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467589,1,`'${getSig1}'`],["0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467590,1,`'${getSig2}'`],["0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60",2,1655467591,1,`'${getSig3}'`]])
+
+    })
 
 
   });

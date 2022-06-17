@@ -2,44 +2,32 @@ require('dotenv').config()
 // const { Sign } = require('crypto');
 const ethers = require('ethers');
 // const { truncate } = require('fs/promises');
-const wallet = new ethers.Wallet("0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80")// const wallet = new ethers.Wallet(process.env.KEY);
+const wallet = new ethers.Wallet("c3fe21d0d8def509c2315d174362126f9cd7ef640d74fdfb74d6d6aa7bf06621")// const wallet = new ethers.Wallet(process.env.KEY);
 module.exports.signTransaction
-= async (contractAddress,userAddress,nftAddress,nftId,minimumTime,paymentPartition,loanAmount,interestPercent,apr,inStableCoin,nonce) =>
+= async (contractAddress,userAddress,tokenType,nonce,tokenId) =>
 {
     const domain = {
         name: "SUSTAIN",
         version: "1",
-        chainId: 31337, //put the chain id
+        chainId: 800001, //put the chain id
         verifyingContract: contractAddress//contract address
     }
 
     const types ={
-        WrappedSustain : [
+        Sustain : [
             {name: 'userAddress', type: 'address'},
-            {name: 'nftAddress',type: 'address'},
-            {name: 'nftId', type: 'uint256'},
-            {name: 'minimumTime', type: 'uint256'},
-            {name: 'paymentPartition', type: 'uint256'},
-            {name: 'loanAmount', type: 'uint256'},
-            {name: 'interestPercent', type: 'uint256'},
-            {name: 'apr', type: 'uint256'},
-            {name: 'inStableCoin',type:'bool'},
+            {name: 'tokenType',type: 'uint256'},
             {name: 'nonce', type: 'uint256'},
+            {name: 'tokenId', type: 'uint256'}
         ]
     }
 
 
     const value = {
         userAddress:userAddress,
-        nftAddress:nftAddress,
-        nftId:nftId,
-        minimumTime:minimumTime,
-        paymentPartition:paymentPartition,
-        loanAmount:loanAmount,
-        interestPercent:interestPercent,
-        apr:apr,
-        inStableCoin:inStableCoin,
+        tokenType:tokenType,
         nonce:nonce,
+        tokenId:tokenId,
     };
     const sign = await wallet._signTypedData(domain,types,value)
     // console.log(sign);

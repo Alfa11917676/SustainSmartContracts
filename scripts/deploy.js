@@ -13,6 +13,7 @@ async function main() {
         "1",
         "SUSTAIN_TOKEN",
         'SUT',
+        'https://tokenUri.com',
         "0x73c272E1054b29A8Ec1615Ad73eE822c70f3E17C",
         "0x79BF6Ab2d78D81da7d7E91990a25A81e93724a60"
     ],{initializer:'initialize'})

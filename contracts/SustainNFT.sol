@@ -30,7 +30,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     // tokenId => true/false
     mapping (uint => bool) public tokenTaken;
 
-    mapping (bytes32 => uint[]) public requestToTokenTypeMap;
+    mapping (bytes32 => uint) public requestToTokenTypeMap;
     mapping (bytes32 => address) public requestToUserMap;
     mapping (bytes32 => uint) public requestToRandomNumber;
 
@@ -65,12 +65,20 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
             }
 
 
-    function getRandomNumber(Sustain memory sustain, uint[] memory tokenTypes) public  returns (bytes32){
-        require (getSigner(sustain) == designatedSigner,'!Signer');
-        require (sustain.userAddress == msg.sender,'!User');
-        require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
-        require (!nonceUsed[sustain.userAddress][sustain.nonce],'Nonce Used Already');
-        nonceUsed[sustain.userAddress][sustain.nonce] = true;
+//    function mintMultipleTokens (Sustain[] memory sustain, uint[] memory tokenTypes) external {
+    function mintMultipleTokens (uint[] memory tokenTypes) external {
+//        require (sustain.length == tokenTypes.length,'Please send equal amount');
+        for (uint i=0; i<tokenTypes.length; i++)
+            mintNFT(tokenTypes[i]);
+    }
+
+//    function mintNFT( uint tokenTypes) public  returns (bytes32){
+    function mintNFT( uint tokenTypes) public  returns (bytes32){
+//        require (getSigner(sustain) == designatedSigner,'!Signer');
+//        require (sustain.userAddress == msg.sender,'!User');
+//        require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
+//        require (!nonceUsed[sustain.userAddress][sustain.nonce],'Nonce Used Already');
+//        nonceUsed[sustain.userAddress][sustain.nonce] = true;
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         bytes32 data = requestRandomness(keyHash, fee);
         requestToTokenTypeMap[data] = tokenTypes;
@@ -80,28 +88,14 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
 
 
     function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
-        requestToRandomNumber [requestId] = randomness;
-        uint randomNumbersRequired = requestToTokenTypeMap[requestId].length;
-        uint[] memory tokenTypes = requestToTokenTypeMap[requestId];
-        for (uint i =0;i<randomNumbersRequired;i++) {
-            uint number = randomNumberGenerator(randomness,i);
-            uint tokenId = getTokenNumber(tokenTypes[i] ,number);
-            tokentier[tokenId] = tokenTypes[i];
+            requestToRandomNumber [requestId] = randomness;
+            uint tokenType = requestToTokenTypeMap[requestId];
+            uint tokenId = getTokenNumber(tokenType ,randomness);
+            tokentier[tokenId] = tokenType;
             tokenTaken[tokenId] = true;
-            token.transferFrom(requestToUserMap[requestId],address(this),tokentierToPrice[tokenTypes[i]]);
+            token.transferFrom(requestToUserMap[requestId],address(this),tokentierToPrice[tokenType]);
             lastClaimTime[tokenId] = block.timestamp;
             _mint(requestToUserMap[requestId],tokenId);
-        }
-    }
-
-    function _giveTokens(address _user, uint[] memory tokenTypes, uint[] memory randomNumbers) internal {
-        for (uint i=0;i< tokenTypes.length;i++){
-                uint tokenId = getTokenNumber(tokenTypes[i],randomNumbers[i]);
-                tokentier[tokenId] = tokenTypes[i];
-                tokenTaken[tokenId] = true;
-                token.transferFrom(_user,address(this),tokentierToPrice[tokenTypes[i]]);
-                _mint(_user,tokenId);
-        }
     }
 
     function getTokenNumber(uint tokenTier, uint _randomNumber) internal view returns (uint) {
@@ -144,16 +138,18 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     }
 
 
-    function mintTokensFromReward (Sustain memory sustain, uint[1] memory _tokenTier) external {
+//    function mintTokensFromReward (Sustain memory sustain, uint _tokenTier) external {
+    function mintTokensFromReward (uint _tokenTier) external {
             uint[] memory tokenIds = new uint[](1);
-            uint[] memory tokenTier= new uint[](1);
-            tokenIds[0] = sustain.tokenId;
-            tokenTier[0] = _tokenTier[0];
-            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[_tokenTier[0]],'Minimum amount not satisfied');
-            uint amount = getRewards(tokenIds,sustain.userAddress);
-            token.transfer(msg.sender,amount);
-            lastClaimTime[sustain.tokenId] = block.timestamp;
-            getRandomNumber(sustain,tokenTier);
+//            uint[] memory tokenTier= new uint[](1);
+//            tokenIds[0] = sustain.tokenId;
+//            tokenTier[0] = _tokenTier[0];
+//            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[_tokenTier],'Minimum amount not satisfied');
+//            uint amount = getRewards(tokenIds,sustain.userAddress);
+//            token.transfer(msg.sender,amount);
+//            lastClaimTime[sustain.tokenId] = block.timestamp;
+//            mintNFT(sustain,_tokenTier);
+            mintNFT(_tokenTier);
         }
 
 
