@@ -154,13 +154,16 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
 //            uint amount = getRewards(tokenIds,msg.sender);
 //            uint amount = getRewards(tokenId,msg.sender);
             uint amount = getRewards(tokenIds,msg.sender);
-            uint price = amount - tokentierToPrice[_tokenTier];
+            uint nftAmount = amount / tokentierToPrice[_tokenTier];
+            uint price = amount - tokentierToPrice[_tokenTier] * nftAmount;
             outstandingBalances[msg.sender][tokenId] += price;
 //            token.transfer(msg.sender,amount);
 //            lastClaimTime[sustain.tokenId] = block.timestamp;
-            lastClaimTime[tokenId] = block.timestamp;
+//            lastClaimTime[tokenId] = block.timestamp;
 //            mintNFT(sustain,_tokenTier);
-            mintNFT(_tokenTier,true);
+            for (uint i = 0; i< nftAmount; i++) {
+                mintNFT(_tokenTier, true);
+            }
         }
 
 
