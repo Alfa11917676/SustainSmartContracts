@@ -21,6 +21,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     uint[] public tokentierToPrice;
     uint[] public tokenIdToTokenAllocation;
 
+    mapping (address => mapping (uint => uint)) public outstandingBalances;
     // tokenId => lastClaimTime
     mapping (uint => uint) public lastClaimTime;
     // tokenId => tokenTier
@@ -69,11 +70,11 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
     function mintMultipleTokens (uint[] memory tokenTypes) external {
 //        require (sustain.length == tokenTypes.length,'Please send equal amount');
         for (uint i=0; i<tokenTypes.length; i++)
-            mintNFT(tokenTypes[i]);
+            mintNFT(tokenTypes[i],false);
     }
-
+    mapping (bytes32 => bool) public mintFromReward;
 //    function mintNFT( uint tokenTypes) public  returns (bytes32){
-    function mintNFT( uint tokenTypes) public  returns (bytes32){
+    function mintNFT( uint tokenTypes, bool takeMoney) internal  returns (bytes32){
 //        require (getSigner(sustain) == designatedSigner,'!Signer');
 //        require (sustain.userAddress == msg.sender,'!User');
 //        require (sustain.nonce + 10 minutes > block.timestamp,'Signature Expired');
@@ -81,6 +82,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
 //        nonceUsed[sustain.userAddress][sustain.nonce] = true;
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with faucet");
         bytes32 data = requestRandomness(keyHash, fee);
+        mintFromReward[data] = takeMoney;
         requestToTokenTypeMap[data] = tokenTypes;
         requestToUserMap[data] = msg.sender;
         return data;
@@ -93,6 +95,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
             uint tokenId = getTokenNumber(tokenType ,randomness);
             tokentier[tokenId] = tokenType;
             tokenTaken[tokenId] = true;
+            if (!mintFromReward[requestId])
             token.transferFrom(requestToUserMap[requestId],address(this),tokentierToPrice[tokenType]);
             lastClaimTime[tokenId] = block.timestamp;
             _mint(requestToUserMap[requestId],tokenId);
@@ -124,6 +127,7 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
                 uint timeDelta = (block.timestamp - lastClaimTime[tokenIds[i]])/ rebaseTime ;
                 uint rewardGenerated = ((timeDelta * rewardRate[tokentier[tokenIds[i]]])* 1 ether) / delta;
                 totalRewardGenerated += rewardGenerated;
+                totalRewardGenerated += outstandingBalances[user][tokenIds[i]];
         }
         return totalRewardGenerated;
     }
@@ -132,24 +136,31 @@ contract SustainNFT is SustainSigner, OwnableUpgradeable, ERC721Upgradeable, VRF
         uint totalRewardGenerated = getRewards(tokenIds, msg.sender);
         for (uint i=0;i<tokenIds.length;i++){
             lastClaimTime[tokenIds[i]] = block.timestamp;
+            outstandingBalances[msg.sender][tokenIds[i]] = 0;
         }
         require (totalRewardGenerated > 0,'No rewards generated');
         token.transfer(msg.sender, totalRewardGenerated);
     }
-
+    // user => tokenId => balance
 
 //    function mintTokensFromReward (Sustain memory sustain, uint _tokenTier) external {
-    function mintTokensFromReward (uint _tokenTier) external {
+    function mintTokensFromReward (uint _tokenTier, uint tokenId) external {
             uint[] memory tokenIds = new uint[](1);
 //            uint[] memory tokenTier= new uint[](1);
 //            tokenIds[0] = sustain.tokenId;
+            tokenIds[0] = tokenId;
 //            tokenTier[0] = _tokenTier[0];
 //            require(getRewards(tokenIds,sustain.userAddress)>tokentierToPrice[_tokenTier],'Minimum amount not satisfied');
-//            uint amount = getRewards(tokenIds,sustain.userAddress);
+//            uint amount = getRewards(tokenIds,msg.sender);
+//            uint amount = getRewards(tokenId,msg.sender);
+            uint amount = getRewards(tokenIds,msg.sender);
+            uint price = amount - tokentierToPrice[_tokenTier];
+            outstandingBalances[msg.sender][tokenId] += price;
 //            token.transfer(msg.sender,amount);
 //            lastClaimTime[sustain.tokenId] = block.timestamp;
+            lastClaimTime[tokenId] = block.timestamp;
 //            mintNFT(sustain,_tokenTier);
-            mintNFT(_tokenTier);
+            mintNFT(_tokenTier,true);
         }
 
 
